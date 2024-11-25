@@ -1,14 +1,22 @@
 <?php
 /**
- * Plugin Name: Zap Now
- * Plugin URI: 
- * Description: Clear WordPress internal caches, transients, and update caches with one click
+ * Plugin Name: ⚡ Zap Now
+ * Plugin URI: https://erik.marketing
+ * Description: Lightweight WordPress cache clearing solution. One-click clearing of WordPress core caches, 
+ * including object cache, transients, theme cache, update caches, menu cache, and rewrite rules. 
+ * Adds a convenient Zap Now button to your admin bar for instant cache clearing.
  * Version: 1.0.0
- * Author: 
- * Author URI: 
- * License: GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Requires at least: 5.0
+ * Requires PHP: 7.2
+ * Author: ErikMarketing
+ * Author URI: https://erik.marketing
+ * License: GPL v3 or later
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.txt
  * Text Domain: zap-now
+ *
+ * @package ZapNow
+ * @author ErikMarketing
+ * @link https://erik.marketing
  */
 
 // If this file is called directly, abort.
