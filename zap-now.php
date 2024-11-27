@@ -5,7 +5,7 @@
  * Description: Lightweight WordPress cache clearing solution. One-click clearing of WordPress core caches, 
  * including object cache, transients, theme cache, update caches, menu cache, and rewrite rules. 
  * Adds a convenient Zap Now button to your admin bar for instant cache clearing.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Requires at least: 5.0
  * Requires PHP: 7.2
  * Author: ErikMarketing
@@ -26,6 +26,11 @@ if (!defined('WPINC')) {
 
 class Zap_Now {
     /**
+     * Nonce action name constant for consistent usage
+     */
+    const NONCE_ACTION = 'zap_cache_nonce';
+
+    /**
      * Initialize the plugin
      */
     public function __construct() {
@@ -35,23 +40,29 @@ class Zap_Now {
     }
 
     /**
-     * Add zap button to admin bar
+     * Add zap button to admin bar with nonce
      */
     public function add_zap_button($wp_admin_bar) {
         if (!current_user_can('manage_options')) {
             return;
         }
 
+        // Create nonce for this session
+        $nonce = wp_create_nonce(self::NONCE_ACTION);
+        
         $wp_admin_bar->add_node(array(
             'id'    => 'zap-now',
             'title' => __('Zap Now!', 'zap-now'),
             'href'  => '#',
-            'meta'  => array('class' => 'zap-now')
+            'meta'  => array(
+                'class' => 'zap-now',
+                'data-nonce' => $nonce // Add nonce as data attribute
+            )
         ));
     }
 
     /**
-     * Add JavaScript for cache zapping
+     * Add JavaScript for cache zapping with nonce verification
      */
     public function add_zap_script() {
         if (!current_user_can('manage_options')) {
@@ -63,6 +74,15 @@ class Zap_Now {
             $('#wp-admin-bar-zap-now').click(function(e) {
                 e.preventDefault();
                 
+                // Get nonce from data attribute
+                const nonce = $(this).find('.ab-item').parent().data('nonce');
+                
+                // Verify nonce exists before proceeding
+                if (!nonce) {
+                    alert('<?php echo esc_js(__('Security verification failed. Please refresh the page and try again.', 'zap-now')); ?>');
+                    return;
+                }
+
                 if (!confirm('<?php echo esc_js(__('Ready to zap all WordPress caches?', 'zap-now')); ?>')) {
                     return;
                 }
@@ -72,7 +92,7 @@ class Zap_Now {
                     type: 'POST',
                     data: {
                         action: 'zap_cache',
-                        nonce: '<?php echo wp_create_nonce('zap_cache_nonce'); ?>'
+                        nonce: nonce
                     },
                     beforeSend: function() {
                         $('#wp-admin-bar-zap-now .ab-item').text('<?php echo esc_js(__('Zapping...', 'zap-now')); ?>');
@@ -84,7 +104,8 @@ class Zap_Now {
                             alert('Error: ' + response.data);
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('Ajax error:', error);
                         alert('<?php echo esc_js(__('Oops! Something went wrong while zapping.', 'zap-now')); ?>');
                     },
                     complete: function() {
@@ -102,11 +123,7 @@ class Zap_Now {
      */
     private function clear_all_transients() {
         global $wpdb;
-        
-        // Delete all transients from options table
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '%_transient_%'");
-        
-        // Clear memory cached transients
         wp_cache_flush();
     }
 
@@ -114,13 +131,8 @@ class Zap_Now {
      * Clear theme customizer cache
      */
     private function clear_theme_cache() {
-        // Clear theme mods
         remove_theme_mods();
-        
-        // Clear customizer cache
         wp_cache_delete('customizer', 'options');
-        
-        // Clear any cached CSS
         delete_option('theme_mods_' . get_stylesheet());
     }
 
@@ -144,11 +156,11 @@ class Zap_Now {
     }
 
     /**
-     * Handle cache zapping
+     * Handle cache zapping with enhanced security
      */
     public function zap_cache_callback() {
-        // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'zap_cache_nonce')) {
+        // Verify nonce first, before any operations
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], self::NONCE_ACTION)) {
             wp_send_json_error(__('Security check failed.', 'zap-now'));
         }
 
@@ -157,6 +169,7 @@ class Zap_Now {
             wp_send_json_error(__('You do not have permission to zap cache.', 'zap-now'));
         }
 
+        // Clear caches
         $cleared = array();
 
         // Clear object cache
