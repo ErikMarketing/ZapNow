@@ -55,10 +55,13 @@ Ultra Light Zap Cache Version. A simple WordPress plugin that adds a cache clear
 4. Wait for success message showing cleared cache types
 
 ## 🔒 Security Features
-* Admin-only access
-* Nonce verification
+
+* Admin-only access with capability verification
+* Multi-layer nonce verification (frontend and backend)
+* Frontend security checks before AJAX calls
 * Direct access prevention
-* Capability checking
+* Enhanced error handling and user feedback
+* Consistent nonce implementation using class constants
 
 ## 🛠️ Technical Details
 * Cleans transients from database
@@ -67,6 +70,7 @@ Ultra Light Zap Cache Version. A simple WordPress plugin that adds a cache clear
 * Flushes rewrite rules
 * Clears navigation cache
 * Minimal resource usage
+* Comprehensive security checks
 * No bloat
 
 ## 🤔 When to Use
@@ -79,6 +83,18 @@ Ultra Light Zap Cache Version. A simple WordPress plugin that adds a cache clear
 
 ## 📦 Contributing
 Pull requests welcome.
+
+## 🔄 Changelog
+
+### 1.0.1
+* Added frontend nonce verification before AJAX calls
+* Implemented NONCE_ACTION class constant for consistency
+* Enhanced security with multiple verification layers
+* Improved error handling
+* Added security checks
+
+### 1.0.0
+* Initial release
 
 ## 📝 License
 [GPL-3.0+](http://www.gnu.org/licenses/gpl-3.0.txt)
